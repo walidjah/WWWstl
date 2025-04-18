@@ -622,104 +622,59 @@ end
 
 -------------------------------------------------------------------------------
 
--- Load Rayfield
-local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
+-- Load Rayfield UI
+local Rayfield = loadstring(game:HttpGet("https://sirius.menu/rayfield"))()
 
 local Window = Rayfield:CreateWindow({
-   Name = "Streetlife",
-   Icon = 0,
-   LoadingTitle = "LAJ Hub",
-   LoadingSubtitle = "by libyaarmy",
-   Theme = "Default",
-   DisableRayfieldPrompts = false,
-   DisableBuildWarnings = false,
-   ConfigurationSaving = {
-      Enabled = true,
-      FolderName = nil,
-      FileName = "LAJ Hub"
-   },
-   Discord = {
-      Enabled = true,
-      Invite = "3d2UT7BhHE",
-      RememberJoins = true
-   },
-   KeySystem = true,
-   KeySettings = {
-      Title = "LAJ Hub | Key System",
-      Subtitle = "Join our Discord to get a key",
-      Note = "Click below to copy the key link",
-      FileName = "LAJ_Hub_Key",
-      SaveKey = true,
-      GrabKeyFromSite = false,
-      GetKey = function()
-         copyLink()
-      end,
-      CheckKey = function(key)
-         return verifyKey(key)
-      end
-   }
+    Name = "Streetlife Utility Hub",
+    Icon = 0,
+    LoadingTitle = "LAJ Hub",
+    LoadingSubtitle = "by libyaarmy",
+    Theme = "Default",
+    DisableRayfieldPrompts = false,
+    DisableBuildWarnings = false,
+
+    ConfigurationSaving = {
+        Enabled = true,
+        FolderName = nil,
+        FileName = "LAJ Hub"
+    },
+
+    Discord = {
+        Enabled = true,
+        Invite = "3d2UT7BhHE",
+        RememberJoins = true
+    },
+
+    KeySystem = true,
+    KeySettings = {
+        Title = "LAJ Hub | Key System",
+        Subtitle = "Join our Discord to get a key",
+        Note = "Click below to copy your personal key link",
+        FileName = "LAJ_Hub_Key",
+        SaveKey = true,
+        GrabKeyFromSite = false,
+        GetKey = function()
+            copyLink() -- from Platoboost
+        end,
+        CheckKey = function(key)
+            return verifyKey(key) -- from Platoboost
+        end
+    }
 })
 
--- Combat Tab
-local CombatTab = Window:CreateTab("Combat", 4483362458)
-
--- Safe Tween-Based Teleports
-local TweenService = game:GetService("TweenService")
-local function SafeTeleport(position)
-   local char = game.Players.LocalPlayer.Character
-   local root = char and char:FindFirstChild("HumanoidRootPart")
-   if not root then return end
-   local tween = TweenService:Create(root, TweenInfo.new(1, Enum.EasingStyle.Linear), {CFrame = CFrame.new(position)})
-   tween:Play()
-end
-
--- Misc Tab
+-- === EXAMPLE FEATURE ===
 local MiscTab = Window:CreateTab("Misc", 4483362458)
-MiscTab:CreateParagraph({Title = "Teleport Locations", Content = "Teleport to important places in StreetLife"})
 
 MiscTab:CreateButton({
-   Name = "Teleport to Rap Station",
-   Callback = function()
-      SafeTeleport(Vector3.new(902.2052, 53.62046, -60.20349))
-   end,
+    Name = "Teleport to Rap Station",
+    Callback = function()
+        local char = game.Players.LocalPlayer.Character
+        local root = char and char:FindFirstChild("HumanoidRootPart")
+        if root then
+            root.CFrame = CFrame.new(902.2052, 53.62046, -60.20349)
+        end
+    end,
 })
 
-MiscTab:CreateButton({
-   Name = "Teleport to Apartment 1",
-   Callback = function()
-      SafeTeleport(Vector3.new(552.0478, -44.42898, -187.2999))
-   end,
-})
-
-MiscTab:CreateButton({
-   Name = "Teleport to Bank",
-   Callback = function()
-      SafeTeleport(Vector3.new(397.2554, 49.25748, 101.6725))
-   end,
-})
-
-MiscTab:CreateButton({
-   Name = "Teleport to The ICE",
-   Callback = function()
-      SafeTeleport(Vector3.new(185.0867, -89.2156, 150.2669))
-   end,
-})
-
--- Player Tab
-local PlayerTab = Window:CreateTab("Player", 4483362458)
-PlayerTab:CreateSlider({
-   Name = "WalkSpeed",
-   Range = {1, 250},
-   Increment = 1,
-   Suffix = "Speed",
-   CurrentValue = 16,
-   Callback = function(Value)
-      local char = game.Players.LocalPlayer.Character
-      local hum = char and char:FindFirstChildOfClass("Humanoid")
-      if hum then
-         hum.WalkSpeed = Value
-      end
-   end,
-})
-
--- ESP Tab (still empty)
+-- Add more tabs/features as needed
