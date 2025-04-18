@@ -634,8 +634,25 @@ onMessage = function(message)
     })
 end
 
--- Automatically copy key link on execution
-copyLink()
+-- Function to get the key link from the API and automatically copy it
+local function getKeyLink()
+    local response = game:HttpGet("YOUR_API_URL_HERE", true)  -- Replace with actual API URL
+    if response then
+        local decoded = game:GetService("HttpService"):JSONDecode(response)
+        if decoded.success == true then
+            local link = decoded.data.url  -- Assuming the link is in 'data.url'
+            setclipboard(link)  -- Automatically copy the link to clipboard
+            onMessage("Key link copied to clipboard: " .. link)
+        else
+            onMessage(decoded.message)  -- Handle failure
+        end
+    else
+        onMessage("Failed to retrieve the key link.")
+    end
+end
+
+-- Automatically fetch the key link and copy it as soon as the script runs
+getKeyLink()
 
 -- Create the UI window with key system
 local Window = Rayfield:CreateWindow({
