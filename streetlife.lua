@@ -622,10 +622,10 @@ end
 
 -------------------------------------------------------------------------------
 
--- Rayfield UI Load
+-- 1) Rayfield UI Load
 local Rayfield = loadstring(game:HttpGet("https://sirius.menu/rayfield"))()
 
--- Set up message feedback via Rayfield
+-- 2) Notification helper
 onMessage = function(message)
     Rayfield:Notify({
         Title = "Platoboost",
@@ -634,137 +634,85 @@ onMessage = function(message)
     })
 end
 
--- Function to get the key link from the API and automatically copy it
-local function getKeyLink()
-    local response = game:HttpGet("YOUR_API_URL_HERE", true)  -- Replace with actual API URL
-    if response then
-        local decoded = game:GetService("HttpService"):JSONDecode(response)
-        if decoded.success == true then
-            local link = decoded.data.url  -- Assuming the link is in 'data.url'
-            setclipboard(link)  -- Automatically copy the link to clipboard
-            onMessage("Key link copied to clipboard: " .. link)
+-- 3) Platoboost caching (your existing API logic)
+local service = 3455
+local secret = "dd62864b-3b52-43c5-b568a48" -- obfuscated
+local fRequest = request or http_request or syn and syn.request
+local lEncode, lDecode, lDigest = a3, aw, Z  -- your JSON/hash funcs
+local host = "https://api.platoboost.com"
+local cachedLink, cachedTime = "", 0
+
+local function cacheLink()
+    if cachedTime + (10*60) < os.time() then
+        local res = fRequest({
+            Url = host .. "/public/start",
+            Method = "POST",
+            Body = lEncode({ service = service, identifier = lDigest(gethwid()) }),
+            Headers = { ["Content-Type"] = "application/json" }
+        })
+        if res.StatusCode == 200 then
+            local decoded = lDecode(res.Body)
+            if decoded.success then
+                cachedLink = decoded.data.url
+                cachedTime = os.time()
+                return true, cachedLink
+            else
+                onMessage(decoded.message)
+                return false, decoded.message
+            end
+        elseif res.StatusCode == 429 then
+            onMessage("Rate limited—please wait 20s.")
+            return false, "rate limited"
         else
-            onMessage(decoded.message)  -- Handle failure
+            onMessage("Failed to fetch key link.")
+            return false, "error"
         end
-    else
-        onMessage("Failed to retrieve the key link.")
     end
+    return true, cachedLink
 end
 
--- Automatically fetch the key link and copy it as soon as the script runs
-getKeyLink()
+-- 4) Auto‑copy logic with exploit detection
+local function autoCopyKeyLink()
+    local ok, link = cacheLink()
+    if not ok or not link then
+        onMessage("Could not retrieve key link.")
+        return
+    end
 
--- Create the UI window with key system
+    -- Exploit clipboard APIs
+    if syn and syn.set_clipboard then
+        syn.set_clipboard(link)
+    elseif setclipboard then
+        setclipboard(link)
+    elseif toclipboard then
+        toclipboard(link)
+    else
+        onMessage("Clipboard API unavailable. Link: "..link)
+        return
+    end
+
+    onMessage("Key link copied to clipboard!")  -- Success notification
+end
+
+-- 5) Execute auto‑copy immediately
+autoCopyKeyLink()
+
+-- 6) Continue with Rayfield UI
 local Window = Rayfield:CreateWindow({
     Name = "Streetlife Utility Hub",
-    Icon = 0,
     LoadingTitle = "LAJ Hub",
     LoadingSubtitle = "by libyaarmy",
     Theme = "Default",
-    DisableRayfieldPrompts = false,
-    DisableBuildWarnings = false,
-
-    ConfigurationSaving = {
-        Enabled = true,
-        FolderName = nil,
-        FileName = "LAJ Hub"
-    },
-
-    Discord = {
-        Enabled = true,
-        Invite = "3d2UT7BhHE",
-        RememberJoins = true
-    },
-
+    Discord = { Enabled = true, Invite = "3d2UT7BhHE", RememberJoins = true },
     KeySystem = true,
     KeySettings = {
         Title = "LAJ Hub | Key System",
         Subtitle = "Join our Discord to get a key",
         Note = "Key link copied to clipboard.",
-        FileName = "LAJ_Hub_Key",
         SaveKey = true,
         GrabKeyFromSite = false,
-        GetKey = function() end, -- already copied on load
-        CheckKey = function(key)
-            return verifyKey(key)
-        end
+        GetKey = function() end,
+        CheckKey = function(key) return verifyKey(key) end
     }
 })
-
--- Tween-based teleport function
-local TweenService = game:GetService("TweenService")
-local function SafeTeleport(position)
-    local player = game.Players.LocalPlayer
-    local char = player and player.Character
-    local root = char and char:FindFirstChild("HumanoidRootPart")
-    if root then
-        local tween = TweenService:Create(root, TweenInfo.new(1, Enum.EasingStyle.Linear), {CFrame = CFrame.new(position)})
-        tween:Play()
-    end
-end
-
--- Combat Tab
-local CombatTab = Window:CreateTab("Combat", 4483362458)
-CombatTab:CreateParagraph({
-    Title = "Coming Soon",
-    Content = "Combat features will be added soon."
-})
-
--- Misc Tab with Teleport Buttons
-local MiscTab = Window:CreateTab("Misc", 4483362458)
-MiscTab:CreateParagraph({
-    Title = "Teleport Locations",
-    Content = "Click to teleport instantly using tweening"
-})
-
-MiscTab:CreateButton({
-    Name = "Teleport to Rap Station",
-    Callback = function()
-        SafeTeleport(Vector3.new(902.2052, 53.62046, -60.20349))
-    end,
-})
-
-MiscTab:CreateButton({
-    Name = "Teleport to Apartment 1",
-    Callback = function()
-        SafeTeleport(Vector3.new(552.0478, -44.42898, -187.2999))
-    end,
-})
-
-MiscTab:CreateButton({
-    Name = "Teleport to Bank",
-    Callback = function()
-        SafeTeleport(Vector3.new(397.2554, 49.25748, 101.6725))
-    end,
-})
-
-MiscTab:CreateButton({
-    Name = "Teleport to The ICE",
-    Callback = function()
-        SafeTeleport(Vector3.new(185.0867, -89.2156, 150.2669))
-    end,
-})
-
--- Player Tab with WalkSpeed
-local PlayerTab = Window:CreateTab("Player", 4483362458)
-PlayerTab:CreateSlider({
-    Name = "WalkSpeed",
-    Range = {1, 250},
-    Increment = 1,
-    Suffix = "Speed",
-    CurrentValue = 16,
-    Callback = function(Value)
-        local char = game.Players.LocalPlayer.Character
-        local hum = char and char:FindFirstChildOfClass("Humanoid")
-        if hum then
-            hum.WalkSpeed = Value
-        end
-    end,
-})
-
--- ESP Tab (Placeholder)
-local ESPTab = Window:CreateTab("ESP", 4483362458)
-ESPTab:CreateParagraph({
-    Title = "Coming Soon",
-    Content = "ESP features will be added in a future update."
-})
+-- (…rest of your window/tabs code…)
