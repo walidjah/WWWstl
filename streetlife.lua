@@ -622,9 +622,22 @@ end
 
 -------------------------------------------------------------------------------
 
--- Load Rayfield UI
+-- Rayfield UI Load
 local Rayfield = loadstring(game:HttpGet("https://sirius.menu/rayfield"))()
 
+-- Set up message feedback via Rayfield
+onMessage = function(message)
+    Rayfield:Notify({
+        Title = "Platoboost",
+        Content = message,
+        Duration = 5
+    })
+end
+
+-- Automatically copy key link on execution
+copyLink()
+
+-- Create the UI window with key system
 local Window = Rayfield:CreateWindow({
     Name = "Streetlife Utility Hub",
     Icon = 0,
@@ -650,31 +663,91 @@ local Window = Rayfield:CreateWindow({
     KeySettings = {
         Title = "LAJ Hub | Key System",
         Subtitle = "Join our Discord to get a key",
-        Note = "Click below to copy your personal key link",
+        Note = "Key link copied to clipboard.",
         FileName = "LAJ_Hub_Key",
         SaveKey = true,
         GrabKeyFromSite = false,
-        GetKey = function()
-            copyLink() -- from Platoboost
-        end,
+        GetKey = function() end, -- already copied on load
         CheckKey = function(key)
-            return verifyKey(key) -- from Platoboost
+            return verifyKey(key)
         end
     }
 })
 
--- === EXAMPLE FEATURE ===
+-- Tween-based teleport function
+local TweenService = game:GetService("TweenService")
+local function SafeTeleport(position)
+    local player = game.Players.LocalPlayer
+    local char = player and player.Character
+    local root = char and char:FindFirstChild("HumanoidRootPart")
+    if root then
+        local tween = TweenService:Create(root, TweenInfo.new(1, Enum.EasingStyle.Linear), {CFrame = CFrame.new(position)})
+        tween:Play()
+    end
+end
+
+-- Combat Tab
+local CombatTab = Window:CreateTab("Combat", 4483362458)
+CombatTab:CreateParagraph({
+    Title = "Coming Soon",
+    Content = "Combat features will be added soon."
+})
+
+-- Misc Tab with Teleport Buttons
 local MiscTab = Window:CreateTab("Misc", 4483362458)
+MiscTab:CreateParagraph({
+    Title = "Teleport Locations",
+    Content = "Click to teleport instantly using tweening"
+})
 
 MiscTab:CreateButton({
     Name = "Teleport to Rap Station",
     Callback = function()
+        SafeTeleport(Vector3.new(902.2052, 53.62046, -60.20349))
+    end,
+})
+
+MiscTab:CreateButton({
+    Name = "Teleport to Apartment 1",
+    Callback = function()
+        SafeTeleport(Vector3.new(552.0478, -44.42898, -187.2999))
+    end,
+})
+
+MiscTab:CreateButton({
+    Name = "Teleport to Bank",
+    Callback = function()
+        SafeTeleport(Vector3.new(397.2554, 49.25748, 101.6725))
+    end,
+})
+
+MiscTab:CreateButton({
+    Name = "Teleport to The ICE",
+    Callback = function()
+        SafeTeleport(Vector3.new(185.0867, -89.2156, 150.2669))
+    end,
+})
+
+-- Player Tab with WalkSpeed
+local PlayerTab = Window:CreateTab("Player", 4483362458)
+PlayerTab:CreateSlider({
+    Name = "WalkSpeed",
+    Range = {1, 250},
+    Increment = 1,
+    Suffix = "Speed",
+    CurrentValue = 16,
+    Callback = function(Value)
         local char = game.Players.LocalPlayer.Character
-        local root = char and char:FindFirstChild("HumanoidRootPart")
-        if root then
-            root.CFrame = CFrame.new(902.2052, 53.62046, -60.20349)
+        local hum = char and char:FindFirstChildOfClass("Humanoid")
+        if hum then
+            hum.WalkSpeed = Value
         end
     end,
 })
 
--- Add more tabs/features as needed
+-- ESP Tab (Placeholder)
+local ESPTab = Window:CreateTab("ESP", 4483362458)
+ESPTab:CreateParagraph({
+    Title = "Coming Soon",
+    Content = "ESP features will be added in a future update."
+})
